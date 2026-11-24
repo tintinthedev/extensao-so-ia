@@ -17,8 +17,10 @@ máquina com `psutil`.
 app.py                  # entrada Streamlit; declara o fragment de atualização
 backend/collector.py    # coleta psutil + estado entre amostras
 frontend/dashboard.py   # orquestra uma renderização completa
-frontend/history.py     # janela deslizante em memória
+frontend/controls.py    # barra lateral: iniciar/pausar e limpar histórico
+frontend/history.py     # janela dos gráficos + registro completo em memória
 frontend/charts.py      # quatro gráficos de histórico
+frontend/measurements.py # tabela do histórico completo + download em CSV
 frontend/processes.py   # top 5 + dialog com a lista completa
 .streamlit/config.toml  # tema nativo (dense-dashboard)
 ```
@@ -64,20 +66,27 @@ O valor exibido é dividido pelo número de CPUs lógicas e limitado a 100%, par
 ficar na mesma escala do gráfico de CPU do sistema. O ranking usa CPU
 decrescente, com RAM como critério de desempate.
 
-### 6. Histórico em memória, janela deslizante de 10 amostras
+### 6. Histórico em memória: janela dos gráficos + registro completo
 
 O histórico vive em `st.session_state` como `deque(maxlen=10)` (20 segundos a
-2 s por amostra). Cada nova amostra empurra a mais antiga para fora. Se o
-`HISTORY_SIZE` mudar em tempo de execução, `_history()` recria o deque para não
-manter um `maxlen` antigo. Não há persistência em disco: reiniciar a aplicação
-zera os gráficos. Amostras repetidas (mesmo timestamp do cache) são descartadas.
+2 s por amostra) para os gráficos, e a mesma amostra também é anexada a uma
+lista sem limite com tudo o que foi coletado na sessão. Cada nova amostra
+empurra a mais antiga para fora da janela, mas permanece no registro completo,
+que alimenta a tabela e o CSV. Se o `HISTORY_SIZE` mudar em tempo de execução,
+`get_history()` recria o deque para não manter um `maxlen` antigo. "Limpar
+histórico" esvazia os dois e zera a última amostra, mantendo o timestamp para
+que o cache do coletor não reintroduza uma amostra repetida. Não há persistência
+em disco: reiniciar a aplicação zera tudo. Amostras repetidas (mesmo timestamp
+do cache) são descartadas.
 
 ### 7. Um único `st.fragment(run_every=2.0)` como laço de atualização
 
-Todo o painel — cards, quatro gráficos e tabela — é renderizado dentro do mesmo
-fragment. Assim, todos os componentes leem a mesma amostra e são atualizados
-junto, sem `st_autorefresh` nem recarregar a página inteira. O título e o texto
-introdutório ficam fora do fragment.
+Todo o painel — cards, quatro gráficos, histórico e tabela de processos — é
+renderizado dentro do mesmo fragment. Assim, todos os componentes leem a mesma
+amostra e são atualizados junto, sem `st_autorefresh` nem recarregar a página
+inteira. O título fica fora do fragment. O `run_every` é `None` quando o
+monitoramento está pausado: o fragment para de disparar e nenhuma amostra é
+coletada; a última amostra continua na tela.
 
 ### 8. Gráficos com Altair e tooltips customizados
 
@@ -125,12 +134,32 @@ referência de API e de boas práticas (por exemplo, `width="stretch"` em vez de
 As dependências são instaladas em `.venv/` na raiz do projeto, nunca no Python
 do sistema. `requirements.txt` é a fonte da verdade.
 
+### 13. Controles de monitoramento na barra lateral
+
+`frontend/controls.py` concentra o botão "Pausar"/"Iniciar monitoramento" e o
+"Limpar histórico". O estado fica em `st.session_state["monitorando"]` (inicia
+ligado, preservando o comportamento anterior) e os cliques usam `on_click`,
+para que o callback rode antes do script e o rótulo do botão já apareça correto
+no mesmo rerun. Os controles são renderizados antes da definição do fragment,
+para que `run_every` seja avaliado com o estado atualizado.
+
+### 14. Tabela do histórico completo e CSV
+
+`frontend/measurements.py` mostra todas as amostras da sessão, da mais recente
+para a mais antiga, em um `st.dataframe` de altura fixa (o scroll interno é
+preservado entre reruns do fragment). O cabeçalho resume quantidade de amostras
+e média/pico de CPU e RAM. O CSV baixa o registro completo em ordem cronológica,
+com data e hora, e as mesmas colunas: CPU, RAM, RAM usada, leitura, escrita e
+número de processos. As colunas usam `NumberColumn` para formatar casas
+decimais; a largura "small" evita que a última coluna seja cortada.
+
 ## Fluxo de uma atualização
 
-1. O fragment dispara a cada 2 s.
+1. O fragment dispara a cada 2 s (ou fica parado, se pausado).
 2. `render_dashboard()` pede uma amostra ao coletor (ou recebe a última, se
-   tiver menos de 1 s).
-3. A amostra é anexada ao histórico da sessão.
-4. Cards, gráficos e tabela são renderizados com essa mesma amostra.
-5. O botão "Ver todos" guarda um snapshot, força um rerun completo e o script
+   tiver menos de 1 s) e a anexa à janela dos gráficos e ao registro completo.
+   Quando pausado, reaproveita `last_metrics` sem coletar nada.
+3. Cards, gráficos, histórico e tabela de processos são renderizados com essa
+   mesma amostra.
+4. O botão "Ver todos" guarda um snapshot, força um rerun completo e o script
    principal abre o dialog com esse snapshot.

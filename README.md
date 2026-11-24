@@ -5,7 +5,10 @@ leitura e escrita de disco e os processos em execução da máquina.
 
 - **Front-end:** Streamlit, com um único `st.fragment(run_every=2.0)`.
 - **Back-end:** pacote Python que coleta as métricas com `psutil`.
-- **Histórico:** janela deslizante de 10 amostras (20 segundos) em memória.
+- **Histórico:** janela deslizante de 10 amostras (20 segundos) nos gráficos e
+  registro completo da sessão na tabela, com download em CSV.
+- **Controles:** iniciar/pausar o monitoramento e limpar o histórico pela barra
+  lateral.
 
 ## Requisitos
 
@@ -54,8 +57,10 @@ Elas são específicas do ambiente e estão no `.gitignore`.
 app.py                  # entrada Streamlit; fragment de atualização
 backend/collector.py    # coleta psutil + estado entre amostras
 frontend/dashboard.py   # orquestra uma renderização completa
-frontend/history.py     # janela deslizante em memória
+frontend/controls.py    # barra lateral: iniciar/pausar e limpar histórico
+frontend/history.py     # janela dos gráficos + registro completo em memória
 frontend/charts.py      # quatro gráficos de histórico
+frontend/measurements.py # tabela do histórico completo + download em CSV
 frontend/processes.py   # top 5 + dialog com a lista completa
 .streamlit/config.toml  # tema nativo (dense-dashboard)
 ```
