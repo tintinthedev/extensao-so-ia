@@ -14,7 +14,7 @@ from backend.collector import SystemMetrics
 class History:
     """Últimas amostras em memória, sem persistência em disco."""
 
-    def __init__(self, max_samples: int = 60) -> None:
+    def __init__(self, max_samples: int = 10) -> None:
         self._rows: deque[dict[str, Any]] = deque(maxlen=max_samples)
         self._last_timestamp: float | None = None
 

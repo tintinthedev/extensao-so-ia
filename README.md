@@ -5,7 +5,7 @@ leitura e escrita de disco e os processos em execução da máquina.
 
 - **Front-end:** Streamlit, com um único `st.fragment(run_every=2.0)`.
 - **Back-end:** pacote Python que coleta as métricas com `psutil`.
-- **Histórico:** janela deslizante de 60 amostras (2 minutos) em memória.
+- **Histórico:** janela deslizante de 10 amostras (20 segundos) em memória.
 
 ## Requisitos
 

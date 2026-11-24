@@ -12,13 +12,13 @@ from frontend.history import History
 from frontend.processes import render_processes
 
 REFRESH_SECONDS = 2.0
-HISTORY_SIZE = 60
+HISTORY_SIZE = 10
 _HISTORY_KEY = "system_metrics_history"
 
 
 def _history() -> History:
     history = st.session_state.get(_HISTORY_KEY)
-    if history is None:
+    if history is None or history.max_samples != HISTORY_SIZE:
         history = History(max_samples=HISTORY_SIZE)
         st.session_state[_HISTORY_KEY] = history
     return history

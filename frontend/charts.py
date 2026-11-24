@@ -11,22 +11,21 @@ import streamlit as st
 from frontend.history import History
 
 _CHART_HEIGHT = 220
-# d3-time-format: minuto e segundo da amostra.
 _TOOLTIP_TIME_FORMAT = "%H:%M:%S"
 
 _SERIES: tuple[tuple[str, str, str, str], ...] = (
-    ("CPU (%)", "CPU (%)", "Uso de CPU nos últimos 2 minutos", ".1f"),
-    ("RAM (%)", "RAM (%)", "Uso de RAM nos últimos 2 minutos", ".1f"),
+    ("CPU (%)", "CPU (%)", "Uso de CPU nos últimos 20 segundos", ".1f"),
+    ("RAM (%)", "RAM (%)", "Uso de RAM nos últimos 20 segundos", ".1f"),
     (
         "Leitura (MB/s)",
         "Disco · leitura (MB/s)",
-        "Taxa de leitura de disco nos últimos 2 minutos",
+        "Taxa de leitura de disco nos últimos 20 segundos",
         ".3~f",
     ),
     (
         "Escrita (MB/s)",
         "Disco · escrita (MB/s)",
-        "Taxa de escrita de disco nos últimos 2 minutos",
+        "Taxa de escrita de disco nos últimos 20 segundos",
         ".3~f",
     ),
 )
@@ -62,7 +61,17 @@ def _chart_card(frame: pd.DataFrame, series: tuple[str, str, str, str]) -> None:
 def _line_chart(
     frame: pd.DataFrame, column: str, title: str, value_format: str
 ) -> alt.LayerChart:
-    x = alt.X(field="Horário", type="temporal", title="Horário")
+    x = alt.X(
+        field="Horário",
+        type="temporal",
+        title="Horário",
+        axis=alt.Axis(
+            values=frame["Horário"].dt.to_pydatetime().tolist(),
+            format=_TOOLTIP_TIME_FORMAT,
+            labelOverlap="greedy",
+            grid=False,
+        ),
+    )
     y = alt.Y(field=column, type="quantitative", title=title)
     tooltip = [
         alt.Tooltip(

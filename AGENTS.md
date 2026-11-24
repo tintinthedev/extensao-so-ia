@@ -64,11 +64,13 @@ O valor exibido é dividido pelo número de CPUs lógicas e limitado a 100%, par
 ficar na mesma escala do gráfico de CPU do sistema. O ranking usa CPU
 decrescente, com RAM como critério de desempate.
 
-### 6. Histórico em memória, janela deslizante de 60 amostras
+### 6. Histórico em memória, janela deslizante de 10 amostras
 
-O histórico vive em `st.session_state` como `deque(maxlen=60)` (2 minutos a
-2 s por amostra). Não há persistência em disco: reiniciar a aplicação zera os
-gráficos. Amostras repetidas (mesmo timestamp do cache) são descartadas.
+O histórico vive em `st.session_state` como `deque(maxlen=10)` (20 segundos a
+2 s por amostra). Cada nova amostra empurra a mais antiga para fora. Se o
+`HISTORY_SIZE` mudar em tempo de execução, `_history()` recria o deque para não
+manter um `maxlen` antigo. Não há persistência em disco: reiniciar a aplicação
+zera os gráficos. Amostras repetidas (mesmo timestamp do cache) são descartadas.
 
 ### 7. Um único `st.fragment(run_every=2.0)` como laço de atualização
 
@@ -81,11 +83,18 @@ introdutório ficam fora do fragment.
 
 Quatro séries temporais em grade 2×2 (CPU, RAM, leitura e escrita) via
 `st.altair_chart`. Altair já vem com o Streamlit e permite controlar o tooltip:
-o horário aparece como `MM:SS` (minuto e segundo da amostra) em vez da data
-completa, e as taxas de disco usam `.3~f` (até 3 casas, sem zeros à direita).
-CPU e RAM usam uma casa decimal. Pontos invisíveis (`OverlayMarkDef`) mantêm a
+o horário aparece como `HH:MM:SS` em vez da data completa, e as taxas de disco
+usam `.3~f` (até 3 casas, sem zeros à direita). CPU e RAM usam uma casa
+decimal. A camada de pontos invisíveis (`mark_point`, `opacity=0`) mantém a
 área de hover sobre a linha. As cores vêm da paleta do tema, não são fixadas
 por gráfico.
+
+O eixo X usa `axis.values` com o timestamp de cada amostra, em vez de uma grade
+fixa (`tickCount`), para acompanhar a coleta de 2 s. `tickCount` com
+`TimeIntervalStep` quebra no Vega do navegador (`Cannot read properties of
+undefined (reading 'every')`). Com 10 amostras em ~375 px, os rótulos de
+`HH:MM:SS` ficam na horizontal e o `labelOverlap="greedy"` ainda oculta metade
+deles — na prática aparecem marcas a cada 4 s.
 
 ### 9. Lista de processos: top 5 + dialog fora do fragment
 
