@@ -77,11 +77,15 @@ fragment. Assim, todos os componentes leem a mesma amostra e são atualizados
 junto, sem `st_autorefresh` nem recarregar a página inteira. O título e o texto
 introdutório ficam fora do fragment.
 
-### 8. Gráficos com `st.line_chart` nativo
+### 8. Gráficos com Altair e tooltips customizados
 
-Quatro séries temporais em grade 2×2 (CPU, RAM, leitura e escrita), sem
-biblioteca de gráficos adicional. O eixo X é o horário da coleta. As cores vêm
-da paleta do tema, não são fixadas por gráfico.
+Quatro séries temporais em grade 2×2 (CPU, RAM, leitura e escrita) via
+`st.altair_chart`. Altair já vem com o Streamlit e permite controlar o tooltip:
+o horário aparece como `MM:SS` (minuto e segundo da amostra) em vez da data
+completa, e as taxas de disco usam `.3~f` (até 3 casas, sem zeros à direita).
+CPU e RAM usam uma casa decimal. Pontos invisíveis (`OverlayMarkDef`) mantêm a
+área de hover sobre a linha. As cores vêm da paleta do tema, não são fixadas
+por gráfico.
 
 ### 9. Lista de processos: top 5 + dialog fora do fragment
 
