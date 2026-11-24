@@ -35,7 +35,6 @@ def render_processes(metrics: SystemMetrics) -> None:
 
     with st.container(border=True):
         st.subheader("Processos")
-        st.caption("Top 5 por uso de CPU, já normalizado pela capacidade total.")
 
         if not metrics.processes:
             st.info("Nenhum processo visível.", icon=":material/visibility_off:")
