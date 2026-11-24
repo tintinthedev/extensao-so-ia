@@ -18,10 +18,6 @@ def live_dashboard() -> None:
 
 
 st.title("Monitor do sistema")
-st.caption(
-    "Métricas coletadas localmente com psutil · "
-    f"atualização a cada {REFRESH_SECONDS:g} segundos"
-)
 
 live_dashboard()
 open_processes_dialog()
