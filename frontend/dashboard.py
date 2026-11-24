@@ -29,18 +29,9 @@ def render_dashboard() -> None:
     history = _history()
     history.append(metrics)
 
-    _render_status(metrics, len(history))
     _render_summary(metrics)
     render_history_charts(history)
     render_processes(metrics)
-
-
-def _render_status(metrics: SystemMetrics, samples: int) -> None:
-    updated = datetime.fromtimestamp(metrics.timestamp)
-    st.caption(
-        f"Atualizado às {updated:%H:%M:%S} · {metrics.cpu_count} núcleos lógicos"
-        f" · {metrics.process_count} processos · histórico {samples}/{HISTORY_SIZE}"
-    )
 
 
 def _render_summary(metrics: SystemMetrics) -> None:
