@@ -123,3 +123,6 @@ textColor = "#F1F5F9"
 borderColor = "#334155"
 primaryColor = "#2563EB"
 linkColor = "#60A5FA"
+
+[client]
+toolbarMode = "viewer"
